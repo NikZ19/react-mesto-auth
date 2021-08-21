@@ -1,11 +1,15 @@
+import React from 'react';
+import { Route, Switch, Link } from 'react-router-dom';
 import logo from '../images/logo.svg';
+import { NavBar } from './NavBar';
 
 export function Header() {
   return (
     <header className="header root__container">
-      <a className="header__logo-link" href="https://praktikum.yandex.ru/" target="_blank" rel="noreferrer">
+      <Link to="/">
         <img className="header__logo" src={logo} alt="Логотип" />
-      </a>
+      </Link>
+      <NavBar />
     </header>
   )
 }
