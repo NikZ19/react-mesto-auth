@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Switch, Redirect } from 'react-router-dom';
+import { Route, Switch, Redirect, useHistory } from 'react-router-dom';
 import { Header } from './Header.js';
 import { Main } from './Main.js';
 import { Footer } from './Footer.js';
@@ -13,6 +13,7 @@ import { ProtectedRoute } from './ProtectedRoute.js';
 import { Register } from './Register.js';
 import { Login } from './Login.js';
 import { InfoTooltip } from './InfoTooltip.js';
+import { getContent } from '../Auth.js';
 
 // import { ConfirmPopup } from './ConfirmPopup/ConfirmPopup.js';
 
@@ -84,7 +85,8 @@ function App() {
     setIsEditAvatarPopupOpen(false);
     setIsAddPlacePopupOpen(false);
     // setIsConfirmPopupOpen(false);
-    setSelectedCard({})
+    setSelectedCard({});
+    setIsInfoTooltipPopupOpen(false);
   };
 
   const handleCardLike = (card) => {
@@ -111,12 +113,41 @@ function App() {
       .catch(err => console.log(err));
   };
 
-  const [loggedIn, setLoggedIn] = React.useState(true);
+  const [loggedIn, setLoggedIn] = React.useState(false);
+  const [userData, setUserData] = React.useState('');
+
+  const history = useHistory();
+
+  const handleLogin = () => {
+    setLoggedIn(true);
+  }
+
+  React.useEffect(() => {
+    tokenCheck();
+  });
+
+  const tokenCheck = () => {
+    if (localStorage.getItem('jwt')) {
+      const jwt = localStorage.getItem('jwt');
+      getContent(jwt).then(res => {
+        if (res) {
+          setLoggedIn(true);
+          setUserData(res.data.email);
+          history.push('/');
+        }
+      })
+        .catch(err => console.log(err));
+    }
+  };
+
+  const [isInfoTooltipPopupOpen, setIsInfoTooltipPopupOpen] = React.useState(false);
+
+  const [isSuccessful, setIsSuccessful] = React.useState(false);
 
   return (
     <div className="root">
       <CurrentUserContext.Provider value={currentUser}>
-        <Header />
+        <Header userData={userData} loggedIn={loggedIn} setLoggedIn={setLoggedIn} />
         <Switch>
           <ProtectedRoute
             exact
@@ -131,21 +162,22 @@ function App() {
             onCardLike={handleCardLike}
             onCardDelete={handleCardDelete} />
           <Route path="/signin">
-            <Login />
+            <Login handleLogin={handleLogin} setIsInfoTooltipPopupOpen={setIsInfoTooltipPopupOpen} setIsSuccessful={setIsSuccessful} />
           </Route>
           <Route path="/signup">
-            <Register />
+            <Register setIsSuccessful={setIsSuccessful} setIsInfoTooltipPopupOpen={setIsInfoTooltipPopupOpen} />
           </Route>
           <Route path="/">
             {loggedIn ? (<Redirect to="/" />) : (<Redirect to="/signin" />)}
           </Route>
         </Switch>
-        <Footer />
+        {loggedIn ? <Footer /> : ""}
+
         <EditProfilePopup isOpen={isEditProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser} />
         <EditAvatarPopup isOpen={isEditAvatarPopupOpen} onClose={closeAllPopups} onUpdateAvatar={handleUpdateAvatar} />
         <AddPlacePopup isOpen={isAddPlacePopupOpen} onClose={closeAllPopups} onAddPlace={handleAddPlaceSubmit} />
         <ImagePopup card={selectedCard} onClose={closeAllPopups} />
-        <InfoTooltip />
+        <InfoTooltip isOpen={isInfoTooltipPopupOpen} onClose={closeAllPopups} isSuccessful={isSuccessful} />
         {/* <ConfirmPopup isOpen={isConfirmPopupOpen} onClose={closeAllPopups} /> */}
       </CurrentUserContext.Provider>
     </div >

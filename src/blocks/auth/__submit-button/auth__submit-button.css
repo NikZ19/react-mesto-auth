@@ -14,3 +14,11 @@
 .auth__submit-button:hover {
   opacity: 0.85;
 }
+
+@media screen and (max-width: 425px) {
+  .auth__submit-button {
+    margin-top: 170px;
+    width: 260px;
+    height: 46px;
+  }
+}
