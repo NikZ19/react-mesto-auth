@@ -1,13 +1,9 @@
 import React from 'react';
-import { useHistory } from 'react-router-dom';
-import * as auth from '../Auth.js';
 
-export function Login({ handleLogin, setIsInfoTooltipPopupOpen, setIsSuccessful }) {
+export function Login({ handleLogin }) {
 
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-
-  const history = useHistory();
 
   const handleChangeEmail = (e) => {
     setEmail(e.target.value);
@@ -19,22 +15,9 @@ export function Login({ handleLogin, setIsInfoTooltipPopupOpen, setIsSuccessful 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    auth.authorize(email, password).then(data => {
-      if (data.token) {
-        setEmail('');
-        setPassword('');
-        handleLogin();
-        history.push('/');
-      } else {
-        setIsSuccessful(false);
-        setIsInfoTooltipPopupOpen(true);
-      }
-    })
-      .catch(err => {
-        console.log(err)
-        setIsSuccessful(false);
-        setIsInfoTooltipPopupOpen(true);
-      });
+    handleLogin(email, password);
+    setEmail('');
+    setPassword('');
   }
 
   return (

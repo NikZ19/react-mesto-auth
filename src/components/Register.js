@@ -1,13 +1,10 @@
 import React from 'react';
-import { Link, useHistory } from 'react-router-dom';
-import * as auth from '../Auth.js';
+import { Link } from 'react-router-dom';
 
-export function Register({ setIsInfoTooltipPopupOpen, setIsSuccessful }) {
+export function Register({ handleRegister }) {
 
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-
-  const history = useHistory();
 
   const handleChangeEmail = (e) => {
     setEmail(e.target.value);
@@ -19,29 +16,17 @@ export function Register({ setIsInfoTooltipPopupOpen, setIsSuccessful }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    auth.register(email, password).then(res => {
-      if (res) {
-        setIsSuccessful(true);
-        setIsInfoTooltipPopupOpen(true);
-        history.push('/signin');
-      } else {
-        setIsSuccessful(false);
-        setIsInfoTooltipPopupOpen(true);
-      }
-    })
-      .catch(err => {
-        console.log(err);
-        setIsSuccessful(false);
-        setIsInfoTooltipPopupOpen(true);
-      })
+    handleRegister(email, password);
+    setEmail('');
+    setPassword('');
   }
 
   return (
     <section className="auth">
       <h1 className="auth__title" >Регистрация</h1>
       <form className="auth__form" onSubmit={handleSubmit}>
-        <input className="auth__input auth__input_margin" onChange={handleChangeEmail} placeholder="Email" type="email"></input>
-        <input className="auth__input auth__input_margin" onChange={handleChangePassword} placeholder="Пароль" type="password" minLength="5"></input>
+        <input className="auth__input auth__input_margin" value={email || ''} onChange={handleChangeEmail} placeholder="Email" type="email"></input>
+        <input className="auth__input auth__input_margin" value={password || ''} onChange={handleChangePassword} placeholder="Пароль" type="password" minLength="5"></input>
         <button className="auth__submit-button" type='submit'>Зарегистрироваться</button>
       </form>
       <Link className="auth__link" to="/signin">Уже зарегистрированы? Войти</Link>

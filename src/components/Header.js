@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, Switch, Route, useHistory } from 'react-router-dom';
 import logo from '../images/logo.svg';
-import { NavBar } from './NavBar';
 
 export function Header(props) {
 
@@ -50,7 +49,6 @@ export function Header(props) {
             </Route>
           </Switch>
         </nav>
-        {/* <NavBar userData={props.userData} setLoggedIn={props.setLoggedIn} /> */}
       </header>
     </>
   )

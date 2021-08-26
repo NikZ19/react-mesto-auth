@@ -13,39 +13,46 @@ import { ProtectedRoute } from './ProtectedRoute.js';
 import { Register } from './Register.js';
 import { Login } from './Login.js';
 import { InfoTooltip } from './InfoTooltip.js';
-import { getContent } from '../Auth.js';
-
-// import { ConfirmPopup } from './ConfirmPopup/ConfirmPopup.js';
-
-
+import { register, authorize, getContent } from '../utils/Auth.js';
 
 function App() {
+
+  const history = useHistory();
 
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = React.useState(false);
   const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = React.useState(false);
   const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = React.useState(false);
-  // const [isConfirmPopupOpen, setIsConfirmPopupOpen] = React.useState(false);
+  const [isInfoTooltipPopupOpen, setIsInfoTooltipPopupOpen] = React.useState(false);
 
-
-
+  const [cards, setCards] = React.useState([]);
   const [selectedCard, setSelectedCard] = React.useState({});
 
   const [currentUser, setCurrentUser] = React.useState({});
+  const [userData, setUserData] = React.useState('');
+
+  const [loggedIn, setLoggedIn] = React.useState(false);
+  const [isSuccessful, setIsSuccessful] = React.useState(false);
 
   React.useEffect(() => {
-    api.getUserInfo()
-      .then(data => {
-        setCurrentUser(data);
-      })
-      .catch(err => console.log(err));
-  }, []);
-
-  const [cards, setCards] = React.useState([]);
+    if (loggedIn) {
+      api.getUserInfo()
+        .then(data => {
+          setCurrentUser(data);
+        })
+        .catch(err => console.log(err));
+    }
+  }, [loggedIn]);
 
   React.useEffect(() => {
-    api.getInitialCards().then(data => setCards(data))
-      .catch(err => console.log(err));
-  }, []);
+    if (loggedIn) {
+      api.getInitialCards().then(data => setCards(data))
+        .catch(err => console.log(err));
+    }
+  }, [loggedIn]);
+
+  React.useEffect(() => {
+    tokenCheck();
+  }, [loggedIn]);
 
   const handleEditProfileClick = () => {
     setIsEditProfilePopupOpen(true);
@@ -84,7 +91,6 @@ function App() {
     setIsEditProfilePopupOpen(false);
     setIsEditAvatarPopupOpen(false);
     setIsAddPlacePopupOpen(false);
-    // setIsConfirmPopupOpen(false);
     setSelectedCard({});
     setIsInfoTooltipPopupOpen(false);
   };
@@ -113,19 +119,6 @@ function App() {
       .catch(err => console.log(err));
   };
 
-  const [loggedIn, setLoggedIn] = React.useState(false);
-  const [userData, setUserData] = React.useState('');
-
-  const history = useHistory();
-
-  const handleLogin = () => {
-    setLoggedIn(true);
-  }
-
-  React.useEffect(() => {
-    tokenCheck();
-  });
-
   const tokenCheck = () => {
     if (localStorage.getItem('jwt')) {
       const jwt = localStorage.getItem('jwt');
@@ -140,9 +133,40 @@ function App() {
     }
   };
 
-  const [isInfoTooltipPopupOpen, setIsInfoTooltipPopupOpen] = React.useState(false);
+  const handleLogin = (email, password) => {
+    authorize(email, password).then(data => {
+      if (data.token) {
+        setLoggedIn(true);
+        history.push('/');
+      } else {
+        setIsSuccessful(false);
+        setIsInfoTooltipPopupOpen(true);
+      }
+    })
+      .catch(err => {
+        console.log(err)
+        setIsSuccessful(false);
+        setIsInfoTooltipPopupOpen(true);
+      });
+  }
 
-  const [isSuccessful, setIsSuccessful] = React.useState(false);
+  const handleRegister = (email, password) => {
+    register(email, password).then(res => {
+      if (res) {
+        setIsSuccessful(true);
+        setIsInfoTooltipPopupOpen(true);
+        history.push('/signin');
+      } else {
+        setIsSuccessful(false);
+        setIsInfoTooltipPopupOpen(true);
+      }
+    })
+      .catch(err => {
+        console.log(err);
+        setIsSuccessful(false);
+        setIsInfoTooltipPopupOpen(true);
+      })
+  }
 
   return (
     <div className="root">
@@ -162,10 +186,10 @@ function App() {
             onCardLike={handleCardLike}
             onCardDelete={handleCardDelete} />
           <Route path="/signin">
-            <Login handleLogin={handleLogin} setIsInfoTooltipPopupOpen={setIsInfoTooltipPopupOpen} setIsSuccessful={setIsSuccessful} />
+            <Login handleLogin={handleLogin} />
           </Route>
           <Route path="/signup">
-            <Register setIsSuccessful={setIsSuccessful} setIsInfoTooltipPopupOpen={setIsInfoTooltipPopupOpen} />
+            <Register handleRegister={handleRegister} />
           </Route>
           <Route path="/">
             {loggedIn ? (<Redirect to="/" />) : (<Redirect to="/signin" />)}
@@ -178,7 +202,6 @@ function App() {
         <AddPlacePopup isOpen={isAddPlacePopupOpen} onClose={closeAllPopups} onAddPlace={handleAddPlaceSubmit} />
         <ImagePopup card={selectedCard} onClose={closeAllPopups} />
         <InfoTooltip isOpen={isInfoTooltipPopupOpen} onClose={closeAllPopups} isSuccessful={isSuccessful} />
-        {/* <ConfirmPopup isOpen={isConfirmPopupOpen} onClose={closeAllPopups} /> */}
       </CurrentUserContext.Provider>
     </div >
   );
